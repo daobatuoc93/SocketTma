@@ -1,4 +1,4 @@
-//     1. For the final example, server5.c, you’ll include the sys/time.h and sys/ioctl.h headers
+//For the final example, server5.c, you’ll include the sys/time.h and sys/ioctl.h headers
 // instead of signal.h as in the last program, and declare some extra variables to deal with
 // select:
 #include <sys/types.h>
@@ -159,7 +159,7 @@ void deleteAllist()
     }
 }
 
-//display the list
+//Display the list
 void printList()
 {
     int num = lengthOfListSocket();
@@ -298,19 +298,19 @@ int main(int argc, char **argv)
         fprintf(stderr, "%s: perror: wrong parameter: port\n", argv[0]);
         return -2;
     }
-    // 2. Create and name a socket for the server:
+    //Create and name a socket for the server:
     server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = htonl(INADDR_ANY);
     server_address.sin_port = htons(port);
     server_len = sizeof(server_address);
     bind(server_sockfd, (struct sockaddr *)&server_address, server_len);
-    // 3. Create a connection queue and initialize readfds to handle input from server_sockfd:
+    // Create a connection queue and initialize readfds to handle input from server_sockfd:
     listen(server_sockfd, 5);
     FD_ZERO(&readfds);
-    //we will set server_ to read ...storage???[t]
+    // we will set server_ to read ...storage???[t]
     FD_SET(server_sockfd, &readfds);
-    // 4. Now wait for clients and requests. Because you have passed a null pointer as the timeout
+    // Now wait for clients and requests. Because you have passed a null pointer as the timeout
     // parameter, no timeout will occur. The program will exit and report an error if select returns a
     // value less than 1:
     while (1)
@@ -322,7 +322,7 @@ int main(int argc, char **argv)
         int nread, n;
         testfds = readfds;
         printf("Server is waiting:\n");
-        //FD_SETSIZE , how many sockets is connect,is include server socket.
+        // FD_SETSIZE , how many sockets is connect,is include server socket.
         result = select(FD_SETSIZE, &testfds, (fd_set *)0,
                         (fd_set *)0, (struct timeval *)0);
         if (result < 1)
@@ -330,11 +330,11 @@ int main(int argc, char **argv)
             perror("server5");
             exit(1);
         }
-        // 5. Once know you’ve got activity, you can find which descriptor it’s on by checking each in
+        // Once know you’ve got activity, you can find which descriptor it’s on by checking each in
         // turn using FD_ISSET:
         for (fd = 0; fd < FD_SETSIZE; fd++)
         {
-            //printf("fd:%d\n", fd); //try to use another type instead of use FD_SETSIZE because it measures about 1024, use another to feel different
+            // printf("fd:%d\n", fd); //try to use another type instead of use FD_SETSIZE because it measures about 1024, use another to feel different
             if (FD_ISSET(fd, &testfds))
             {
                 // If the activity is on server_sockfd, it must be a request for a new connection, and you add the
@@ -351,7 +351,7 @@ int main(int argc, char **argv)
                     }
                     printf("==>Socket: [%d] connect \n", client_sockfd);
                     new_Client->sock = client_sockfd;
-                    //this's a first time client participate this room.
+                    // this's a first time client participate this room.
                     new_Client->registration = false;
                     insertFirst(new_Client); // If we storage client on linked list.Use this case
                     FD_SET(new_Client->sock, &readfds);
@@ -361,7 +361,7 @@ int main(int argc, char **argv)
                 // examples.
                 else
                 {
-                    //search Id on Data,if not,request to client to sign up before go to chat box.
+                    // search Id on Data,if not,request to client to sign up before go to chat box.
                     struct Node *eventConnect = findClient(fd);
                     // The room chat have 1024 client ,because we have FD_SETSIZE =1024;
                     if (eventConnect->client.registration == false)
