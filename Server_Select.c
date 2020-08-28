@@ -281,18 +281,28 @@ void delete_from_begin()
     free(head);
     head = t;
 }
-int main()
+int main(int argc, char **argv)
 {
     int server_sockfd, client_sockfd;
-    int server_len, client_len;
+    int server_len, client_len, port;
     struct sockaddr_in server_address;
     int result;
     fd_set readfds, testfds;
+    if (argc != 2)
+    {
+        fprintf(stderr, "usage: %s port\n", argv[0]);
+        return -1;
+    }
+    if (sscanf(argv[1], "%d", &port) <= 0)
+    {
+        fprintf(stderr, "%s: perror: wrong parameter: port\n", argv[0]);
+        return -2;
+    }
     // 2. Create and name a socket for the server:
     server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = htonl(INADDR_ANY);
-    server_address.sin_port = htons(9734);
+    server_address.sin_port = htons(port);
     server_len = sizeof(server_address);
     bind(server_sockfd, (struct sockaddr *)&server_address, server_len);
     // 3. Create a connection queue and initialize readfds to handle input from server_sockfd:
@@ -320,14 +330,14 @@ int main()
             perror("server5");
             exit(1);
         }
-        // 5. Once you know you’ve got activity, you can find which descriptor it’s on by checking each in
+        // 5. Once know you’ve got activity, you can find which descriptor it’s on by checking each in
         // turn using FD_ISSET:
         for (fd = 0; fd < FD_SETSIZE; fd++)
         {
-            //printf("fd:%d\n", fd); //there are nothing (-_-) FD_SETSIZE mensure about 1024,use another to feel different
+            //printf("fd:%d\n", fd); //try to use another type instead of use FD_SETSIZE because it measures about 1024, use another to feel different
             if (FD_ISSET(fd, &testfds))
             {
-                // 6. If the activity is on server_sockfd, it must be a request for a new connection, and you add the
+                // If the activity is on server_sockfd, it must be a request for a new connection, and you add the
                 // associated client_sockfd to the descriptor set:
                 if (fd == server_sockfd)
                 {
@@ -339,36 +349,51 @@ int main()
                         free(new_Client);
                         exit(1);
                     }
+                    printf("==>user: [%d] connect \n", client_sockfd);
                     new_Client->sock = client_sockfd;
                     new_Client->registration = false;
                     insertFirst(new_Client); // If we storage client on linked list.Use this case
                     FD_SET(new_Client->sock, &readfds);
-                    printf("adding client on fd %d\n", client_sockfd);
                 }
-                // 7. If it isn’t the server, it must be client activity. If close is received, the client has gone away, and
+                // If it isn’t the server, it must be client activity. If close is received, the client has gone away, and
                 // you remove it from the descriptor set. Otherwise, you "serve" the client as in the previous
                 // examples.
                 else
                 {
+                    //search Id on Data,if not,request to client to sign up before go to chat box.
                     struct Node *eventConnect = findClient(fd);
+                    //printf("----User [%d] connected! registration is :%s\n",eventConnect->client.sock, eventConnect->client.registration ? "true" : "false");
                     // The room chat have 1024 client ,because we have FD_SETSIZE =1024;
                     if (eventConnect->client.registration == false)
                     {
+                        const char *respond = "You need to enter your user_name before joining the chatbox!\n Please press your user_name:";
+                        if (write(eventConnect->client.sock, respond, sizeof(respond)) > 0)
+                        {
+                            printf("Request OK\n");
+                        }
+                        else
+                        {
+                           printf("Request Not OK\n");
+                        }
+                        
                         memset(usernamerecv, 0, 30);
                         n = read(eventConnect->client.sock, usernamerecv, 30);
                         if (n < 0)
                         {
-                            perror("perror reading from client ");
+                            perror("Error reading from client ");
                         }
                         else if (n == 0)
                         {
                             printf("\nClient has been disconnected!\n");
+                            FD_CLR(eventConnect->client.sock, &readfds);
                             deleteSocket(eventConnect);
                         }
                         else
                         {
                             printf("User [%s] is connected!\n", usernamerecv);
                             strcpy(eventConnect->client.username, usernamerecv);
+                            //regis_ client OK...
+                            eventConnect->client.registration = true;
                         }
                     }
                     else
@@ -384,6 +409,7 @@ int main()
                         {
                             printf("\nClient [%s] has been disconnected!\n", eventConnect->client.username);
                             printf("Delete Client :[%s]\n", eventConnect->client.username);
+                            FD_CLR(eventConnect->client.sock, &readfds);
                             deleteSocket(eventConnect);
                             printf("Number of alive user in this room: %d\n", lengthOfListSocket());
                         }
