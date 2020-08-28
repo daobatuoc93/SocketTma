@@ -349,8 +349,9 @@ int main(int argc, char **argv)
                         free(new_Client);
                         exit(1);
                     }
-                    printf("==>user: [%d] connect \n", client_sockfd);
+                    printf("==>Socket: [%d] connect \n", client_sockfd);
                     new_Client->sock = client_sockfd;
+                    //this's a first time client participate this room.
                     new_Client->registration = false;
                     insertFirst(new_Client); // If we storage client on linked list.Use this case
                     FD_SET(new_Client->sock, &readfds);
@@ -362,20 +363,9 @@ int main(int argc, char **argv)
                 {
                     //search Id on Data,if not,request to client to sign up before go to chat box.
                     struct Node *eventConnect = findClient(fd);
-                    //printf("----User [%d] connected! registration is :%s\n",eventConnect->client.sock, eventConnect->client.registration ? "true" : "false");
                     // The room chat have 1024 client ,because we have FD_SETSIZE =1024;
                     if (eventConnect->client.registration == false)
                     {
-                        const char *respond = "You need to enter your user_name before joining the chatbox!\n Please press your user_name:";
-                        if (write(eventConnect->client.sock, respond, sizeof(respond)) > 0)
-                        {
-                            printf("Request OK\n");
-                        }
-                        else
-                        {
-                           printf("Request Not OK\n");
-                        }
-                        
                         memset(usernamerecv, 0, 30);
                         n = read(eventConnect->client.sock, usernamerecv, 30);
                         if (n < 0)
@@ -441,21 +431,6 @@ int main(int argc, char **argv)
                         memset(recvChar, 0, 1024);
                         memset(userDATA, 0, 30);
                     }
-
-                    // ioctl(fd, FIONREAD, &nread);
-                    // if (nread == 0)
-                    // {
-                    //     close(fd);
-                    //     FD_CLR(fd, &readfds);
-                    //     printf("removing client on fd %d\n", fd);
-                    // }
-                    // else
-                    // {
-                    //     read(fd, &ch, 1);
-                    //     printf("serving client on fd %d\n", fd);
-                    //     ch++;
-                    //     write(fd, &ch, 1);
-                    // }
                 }
             }
         }
