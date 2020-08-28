@@ -351,6 +351,7 @@ int main(int argc, char **argv)
                     }
                     printf("==>user: [%d] connect \n", client_sockfd);
                     new_Client->sock = client_sockfd;
+                    //this's a first time client participate this room.
                     new_Client->registration = false;
                     insertFirst(new_Client); // If we storage client on linked list.Use this case
                     FD_SET(new_Client->sock, &readfds);
